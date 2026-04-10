@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>引力枢纽 · 张泽禹生日·全国星光地图</title>
-  <!-- ECharts 中国地图 -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/js/china.js"></script>
-  <!-- Supabase 客户端 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif; }
@@ -262,14 +260,12 @@
     "use strict";
 
     // ==================== 🔥 请替换为您自己的 Supabase 配置 ====================
-    // 如何获取？请参考《Supabase 配置步骤》
-    https://gizmhqjgffirzavlxbjs.supabase.co  
-    sb_publishable_HMmjvtwiqJmtC67WSiQtkQ_iMlL7snW       
-    // ============================================================================
+    const SUPABASE_URL = 'https://gizmhqjgfirzavlxbjs.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_HMmjvtwiqJmtC67WsIqtkQ_iMlL7snW';
+    // ===========================================================================
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 完整省份列表（包含台湾、香港、澳门及南海诸岛相关区域处理）
     const PROVINCE_LIST = [
       "北京", "天津", "上海", "重庆",
       "河北", "山西", "辽宁", "吉林", "黑龙江",
