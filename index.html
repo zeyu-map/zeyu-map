@@ -9,194 +9,66 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif; }
-    body {
-      min-height: 100vh;
-      background: linear-gradient(145deg, #f7fff0 0%, #e2f3d5 100%);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 20px;
-      position: relative;
-      overflow-y: auto;
-    }
-    .map-card {
-      width: 1300px;
-      max-width: 100%;
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 48px;
-      box-shadow: 0 20px 40px rgba(40, 70, 30, 0.15);
-      padding: 24px 28px 30px;
-      border: 1px solid rgba(120, 180, 90, 0.25);
-      position: relative;
-      z-index: 10;
-      margin-bottom: 20px;
-    }
-    .creator-signature {
-      position: absolute; top: 22px; left: 30px;
-      font-weight: 600; font-size: 1.5rem; color: #2b5e1c;
-      text-shadow: 2px 2px 0 #e5ffd9;
-      background: rgba(220, 250, 200, 0.6);
-      padding: 6px 22px; border-radius: 60px;
-      backdrop-filter: blur(5px); border: 1px solid #9fcc8b;
-      z-index: 15;
-    }
+    body { min-height: 100vh; background: linear-gradient(145deg, #f7fff0 0%, #e2f3d5 100%); display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; overflow: hidden; }
+    .map-card { width: 1300px; max-width: 100%; background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(12px); border-radius: 48px; padding: 24px 28px 30px; border: 1px solid rgba(120, 180, 90, 0.25); position: relative; z-index: 10; display: flex; flex-direction: column; }
+    .creator-signature { font-weight: 600; font-size: 1.5rem; letter-spacing: 2px; color: #2b5e1c; text-shadow: 2px 2px 0 #e5ffd9; background: rgba(220, 250, 200, 0.6); padding: 6px 22px; border-radius: 60px; backdrop-filter: blur(5px); border: 1px solid #9fcc8b; position: absolute; top: 22px; left: 30px; z-index: 15; }
     .creator-signature span { font-weight: 300; font-size: 0.9rem; margin-left: 6px; color: #3f7840; }
-
-    /* 可拖拽的星光守则面板 */
-    .notice-corner {
-      position: absolute; top: 80px; left: 60px; /* 初始位置左上区域，可拖拽 */
-      background: #fafff7; padding: 14px 22px;
-      border-radius: 36px 12px 36px 12px;
-      box-shadow: 0 8px 12px rgba(60, 90, 30, 0.08);
-      border-left: 6px solid #6da546;
-      max-width: 320px;
-      backdrop-filter: blur(4px);
-      color: #1e4216; font-size: 0.9rem; line-height: 1.5;
-      z-index: 20; /* 高于地图，可被拖拽 */
-      cursor: move; /* 提示可移动 */
-      user-select: none; /* 防止拖拽时选中文字 */
-    }
+    .notice-corner { position: absolute; bottom: 26px; right: 32px; background: #fafff7; padding: 14px 22px; border-radius: 36px 12px 36px 12px; box-shadow: 0 8px 12px rgba(60, 90, 30, 0.08); border-left: 6px solid #6da546; max-width: 320px; backdrop-filter: blur(4px); color: #1e4216; font-size: 0.9rem; line-height: 1.5; z-index: 15; cursor: move; user-select: none; }
     .notice-corner strong { font-size: 1rem; color: #2f6b1c; display: block; margin-bottom: 6px; }
-    .sync-badge {
-      margin-top: 8px; background: #d4eac2; border-radius: 20px;
-      padding: 6px 12px; font-size: 0.85rem; display: inline-block; color: #1d4e0e;
-    }
+    .sync-badge { margin-top: 8px; background: #d4eac2; border-radius: 20px; padding: 6px 12px; font-size: 0.85rem; display: inline-block; color: #1d4e0e; }
     .title-badge { text-align: center; margin-bottom: 8px; }
     .title-badge h2 { font-weight: 500; color: #2b5a1e; letter-spacing: 4px; font-size: 1.3rem; }
     .title-badge h2 i { font-style: normal; background: #a6d68e; padding: 2px 14px; border-radius: 40px; color: #1a3f0e; }
-    #chinaMap {
-      width: 100%; height: 540px; border-radius: 32px;
-      background: #e6f7dd;
-      box-shadow: inset 0 0 0 1px rgba(80, 130, 50, 0.2), 0 6px 14px rgba(0,20,0,0.05);
-      margin: 8px 0 12px;
-    }
+    #chinaMap { width: 100%; height: 540px; border-radius: 32px; background: #e6f7dd; box-shadow: inset 0 0 0 1px rgba(80, 130, 50, 0.2), 0 6px 14px rgba(0, 20, 0, 0.05); margin: 8px 0 12px; flex-shrink: 0; }
     .info-panel { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 16px; }
-    .total-clicks-card {
-      flex: 1.2; min-width: 240px;
-      background: #dff0d3; border-radius: 60px 20px 60px 20px;
-      padding: 16px 26px; box-shadow: 0 6px 0 #7da064; border: 1px solid #b1d89c;
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .total-clicks-card { flex: 1.2; min-width: 240px; background: #dff0d3; border-radius: 60px 20px 60px 20px; padding: 16px 26px; box-shadow: 0 6px 0 #7da064; border: 1px solid #b1d89c; display: flex; align-items: center; justify-content: space-between; }
     .total-label { font-size: 1.5rem; font-weight: 700; color: #1c4210; display: flex; align-items: center; gap: 10px; }
-    .total-number {
-      font-size: 3.4rem; font-weight: 800; background: #1f4f12; color: #f3ffe7;
-      padding: 6px 24px; border-radius: 60px; letter-spacing: 2px;
-      box-shadow: inset 0 -2px 0 #b1e09a, 0 4px 0 #0f2a07;
-    }
-    .province-detail {
-      flex: 2.2; background: #f5fff0; border-radius: 30px 12px 30px 12px;
-      padding: 16px 22px; border: 1px solid #b1da9a;
-      box-shadow: 0 4px 8px rgba(50, 80, 20, 0.08); backdrop-filter: blur(2px); min-width: 320px;
-    }
+    .total-number { font-size: 3.4rem; font-weight: 800; background: #1f4f12; color: #f3ffe7; padding: 6px 24px; border-radius: 60px; letter-spacing: 2px; box-shadow: inset 0 -2px 0 #b1e09a, 0 4px 0 #0f2a07; }
+    .province-detail { flex: 2.2; background: #f5fff0; border-radius: 30px 12px 30px 12px; padding: 16px 22px; border: 1px solid #b1da9a; box-shadow: 0 4px 8px rgba(50, 80, 20, 0.08); backdrop-filter: blur(2px); min-width: 320px; }
     .province-header { display: flex; align-items: baseline; gap: 20px; border-bottom: 2px dashed #9bc181; padding-bottom: 10px; margin-bottom: 14px; }
     .current-province { font-size: 2rem; font-weight: 700; color: #1a4f0e; }
     .province-clicks { font-size: 1.4rem; background: #c8e6b5; padding: 4px 18px; border-radius: 40px; color: #173d0a; font-weight: 600; }
-    .message-section {
-      max-height: 200px; overflow-y: auto; padding-right: 8px; border: 1px solid #b1d89c;
-      border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.6);
-    }
-    .message-item {
-      background: #ffffffc9; margin-bottom: 8px; padding: 8px 16px;
-      border-radius: 28px 8px 28px 8px; border-left: 6px solid #6fa84a;
-      font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); word-break: break-word;
-    }
+    .message-section { max-height: 300px; overflow-y: auto; padding-right: 8px; }
+    .message-item { background: #ffffffc9; margin-bottom: 8px; padding: 8px 16px; border-radius: 28px 8px 28px 8px; border-left: 6px solid #6fa84a; font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); word-break: break-word; }
     .message-time { font-size: 0.7rem; color: #557a3e; margin-right: 8px; }
     .empty-message { color: #6f8f60; font-style: italic; padding: 12px 6px; text-align: center; }
     .hint-click { font-size: 0.85rem; margin-left: 12px; color: #3e6b2b; }
-
-    /* 弹幕容器，最高层级，不阻挡点击 */
-    #danmaku-container {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: 500; /* 最高层 */
-      overflow: hidden;
-    }
-    .danmaku-item {
-      position: absolute; white-space: nowrap; font-weight: bold;
-      color: #fff; text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
-      pointer-events: none;
-      animation: danmaku-float 30s linear infinite;
-      opacity: 0.7;
-    }
-    @keyframes danmaku-float {
-      0% { transform: translate(0, 0) rotate(0deg); }
-      25% { transform: translate(30px, -60px) rotate(1deg); }
-      50% { transform: translate(-20px, -130px) rotate(-1deg); }
-      75% { transform: translate(10px, -200px) rotate(0.5deg); }
-      100% { transform: translate(0, -270px) rotate(0deg); }
-    }
-
-    /* 模态框 */
-    .modal-overlay {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.3); z-index: 200;
-      justify-content: center; align-items: center;
-    }
-    .modal-content {
-      background: #eaf7e3; border-radius: 36px; padding: 30px;
-      text-align: center; box-shadow: 0 15px 30px rgba(30,60,10,0.25);
-      border: 2px solid #8bc34a; max-width: 420px; color: #1e4216;
-    }
-    .modal-content p { font-size: 1.4rem; margin-bottom: 20px; font-weight: 600; color: #1f4f12; }
-    .modal-content button {
-      background: #6da546; color: white; border: none; padding: 12px 28px;
-      margin: 10px; border-radius: 30px; font-size: 1.1rem; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .modal-content button:hover { background: #4d7a2c; }
-    .modal-content .close-btn { background: transparent; color: #2b5e1c; border: 2px solid #6da546; margin-top: 20px; }
-    .modal-content .close-btn:hover { background: #6da546; color: white; }
-
-    .real-time-clock { font-size: 0.85rem; color: #3e6b2b; display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-
-    @media (max-width: 700px) {
-      .map-card { padding: 16px; }
-      .creator-signature { font-size: 1.1rem; top: 12px; left: 16px; }
-      .notice-corner { top: 50px; left: 20px; padding: 10px 14px; }
-      .danmaku-item { font-size: 14px !important; }
-      #chinaMap { height: 400px; }
-      .total-number { font-size: 2.4rem; }
-    }
+    /* 弹幕容器 - 满屏漂浮 */
+    #danmaku-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; }
+    .danmaku-item { position: absolute; white-space: nowrap; font-weight: bold; color: rgba(255, 255, 255, 0.25); text-shadow: 1px 1px 2px rgba(0,0,0,0.3); pointer-events: none; will-change: transform; }
+    /* 彩蛋对话框 */
+    #custom-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+    #custom-modal .modal-content { background: #e6f7e0; border-radius: 30px; padding: 30px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 3px solid #7db35a; max-width: 420px; width: 90%; position: relative; }
+    #custom-modal p { font-size: 1.4rem; color: #1e4216; margin-bottom: 25px; font-weight: 600; }
+    #custom-modal button { background: #7db35a; color: white; border: none; padding: 12px 28px; margin: 8px 12px; border-radius: 30px; font-size: 1.05rem; cursor: pointer; transition: background 0.2s; }
+    #custom-modal button:hover { background: #5a8f3c; }
+    .modal-close { position: absolute; top: 12px; right: 18px; font-size: 24px; cursor: pointer; color: #2b5e1c; background: none; border: none; }
+    @media (max-width: 700px) { .map-card { padding: 16px; } .creator-signature { font-size: 1.1rem; top: 12px; left: 16px; } .notice-corner { bottom: 12px; right: 16px; padding: 10px 14px; } #chinaMap { height: 400px; } .total-number { font-size: 2.4rem; } }
   </style>
 </head>
 <body>
   <div id="danmaku-container"></div>
-
-  <!-- 祝福选择模态框 -->
-  <div id="msg-modal" class="modal-overlay">
+  <!-- 彩蛋对话框（手动关闭） -->
+  <div id="custom-modal">
     <div class="modal-content">
-      <p>✨ 请选择你的祝福 ✨</p>
-      <button id="msg-opt-1">张泽禹，生日快乐</button>
-      <button id="msg-opt-2">我将永远陪伴张泽禹</button>
-    </div>
-  </div>
-
-  <!-- 彩蛋模态框 -->
-  <div id="easter-modal" class="modal-overlay">
-    <div class="modal-content">
-      <p>漫山遍野的星光，皆为张泽禹而来</p>
-      <button class="close-btn" id="easter-close">关闭 💚</button>
+      <span class="modal-close" id="modal-close-btn">&times;</span>
+      <p>漫山遍野的星光，皆为张泽禹而来。</p>
+      <button id="msg-option-1">张泽禹，生日快乐</button>
+      <button id="msg-option-2">我将永远陪伴张泽禹</button>
     </div>
   </div>
 
   <div class="map-card">
     <div class="creator-signature">引力枢纽 <span>· 张泽禹生日献礼</span></div>
-
-    <!-- 星光守则（可拖动） -->
-    <div class="notice-corner" id="draggable-notice">
+    <div class="notice-corner" id="notice-corner-draggable">
       <strong>✨ 星光守则 ✨</strong>
       <p>① 此网站专注于庆祝张泽禹生日。</p>
       <p>② 点击次数越多，该省份越亮，<br>　证明喜欢泽禹的人越多 💚</p>
       <div style="margin-top:12px;border-top:1px dashed #9bc181;padding-top:8px;">
-        <span style="font-weight:600;">🎸 云端实时同步</span><br>
+        <span style="font-weight:600;">🕒 云端实时同步</span><br>
         <span id="syncStatusText" class="sync-badge" style="background:#c8e6b5;">⏳ 连接中...</span>
-        <div class="real-time-clock">
-          <span id="live-time">--:--:--</span>
-        </div>
       </div>
     </div>
-
     <div class="title-badge"><h2><i>🗺️ 泽禹 · 光迹（全国可点·实时同步）</i></h2></div>
     <div id="chinaMap"></div>
     <div class="info-panel">
@@ -220,7 +92,6 @@
   <script>
     (function(){
       "use strict";
-
       // Supabase 配置
       const SUPABASE_URL = 'https://gizmhqjgffirzavlxbjs.supabase.co';
       const SUPABASE_ANON_KEY = 'sb_publishable_HMmjvtwiqJmtC67WSiQtkQ_iMlL7snW';
@@ -232,7 +103,6 @@
         "广东","海南","四川","贵州","云南","陕西","甘肃","青海","台湾",
         "内蒙古","广西","西藏","宁夏","新疆","香港","澳门","南海诸岛"
       ];
-
       const PROVINCE_CENTERS = {
         "北京":[116.46,39.92],"天津":[117.2,39.13],"上海":[121.48,31.22],
         "重庆":[106.54,29.59],"河北":[114.48,38.03],"山西":[112.53,37.87],
@@ -248,54 +118,15 @@
         "澳门":[113.55,22.19],"南海诸岛":[112.3,16.8]
       };
 
-      let provinceData = {};
-      let currentSelected = "北京";
-      let chart = null;
+      let provinceData = {}, currentSelected = "北京", chart = null;
       const syncStatusText = document.getElementById('syncStatusText');
       const danmakuContainer = document.getElementById('danmaku-container');
-      const msgModal = document.getElementById('msg-modal');
-      const easterModal = document.getElementById('easter-modal');
-      let msgResolver = null;
-      let easterResolver = null;
+      const modal = document.getElementById('custom-modal');
+      let resolvePromise = null;
 
-      // 实时时钟
-      function updateClock() {
-        document.getElementById('live-time').innerText = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-      }
-      setInterval(updateClock, 1000);
-      updateClock();
-
-      // === 拖拽功能（星光守则面板） ===
-      function makeDraggable(el) {
-        let startX, startY, initialX, initialY;
-        el.addEventListener('mousedown', (e) => {
-          // 避免拖动面板内按钮/文字导致的误触
-          if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'A') return;
-          e.preventDefault();
-          startX = e.clientX;
-          startY = e.clientY;
-          const rect = el.getBoundingClientRect();
-          initialX = rect.left;
-          initialY = rect.top;
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        });
-
-        function onMove(e) {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          el.style.left = (initialX + dx) + 'px';
-          el.style.top = (initialY + dy) + 'px';
-          el.style.right = 'auto';
-          el.style.bottom = 'auto';
-        }
-
-        function onUp() {
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-        }
-      }
-      makeDraggable(document.getElementById('draggable-notice'));
+      // 弹幕队列管理
+      const danmakuPool = [];
+      const MAX_DANMAKU = 80; // 可同时显示的弹幕数量（控制性能）
 
       function createEmptyData() {
         const data = {};
@@ -303,224 +134,250 @@
         return data;
       }
 
-      function calcTotal() {
-        return Object.values(provinceData).reduce((s, i) => s + i.count, 0);
-      }
-      function updateTotal() {
-        document.getElementById('totalClicksDisplay').innerText = calcTotal();
+      function calcTotal() { return Object.values(provinceData).reduce((s,i)=>s+i.count,0); }
+      function updateTotal() { document.getElementById('totalClicksDisplay').innerText = calcTotal(); }
+
+      // 创建一条持续上升的弹幕，添加到容器并循环
+      function spawnDanmaku(text) {
+        const el = document.createElement('div');
+        el.className = 'danmaku-item';
+        el.textContent = text;
+        el.style.left = (Math.random() * 90 + 5) + '%';
+        el.style.top = (Math.random() * 80 + 10) + '%';
+        el.style.fontSize = (16 + Math.floor(Math.random() * 10)) + 'px';
+        el.style.opacity = '0.25';
+        danmakuContainer.appendChild(el);
+
+        // 动画：从当前位置向上移动，到达顶部后重新到底部并改变水平位置（模拟持续漂浮）
+        function runAnimation() {
+          const currentTop = parseFloat(el.style.top) || (Math.random() * 80 + 10);
+          const startY = currentTop;
+          const endY = -10; // 上升到窗外
+          const duration = 8000 + Math.random() * 7000; // 8~15秒
+          const delay = Math.random() * 3000; // 随机延迟
+          const startX = parseFloat(el.style.left) || (Math.random() * 90 + 5);
+
+          el.animate([
+            { transform: `translateX(${startX}vw) translateY(${startY}vh)`, opacity: 0 },
+            { transform: `translateX(${startX + (Math.random()-0.5)*10}vw) translateY(${endY}vh)`, opacity: 0.3, offset: 0.3 },
+            { transform: `translateX(${startX + (Math.random()-0.5)*20}vw) translateY(${endY}vh)`, opacity: 0.25, offset: 0.8 },
+            { transform: `translateX(${startX + (Math.random()-0.5)*20}vw) translateY(${endY}vh)`, opacity: 0 }
+          ], {
+            duration: duration,
+            delay: delay,
+            fill: 'forwards'
+          }).onfinish = () => {
+            // 重新设置位置并再次动画，实现无限循环
+            el.style.left = (Math.random() * 90 + 5) + '%';
+            el.style.top = (100 + Math.random() * 20) + '%'; // 从底部外开始
+            runAnimation();
+          };
+        }
+        runAnimation();
+        return el;
       }
 
-      // 渲染永久弹幕（从云数据提取所有留言，最多200条）
-      function renderAllDanmaku() {
-        danmakuContainer.innerHTML = ''; // 清空重新渲染
+      // 初始化或更新全屏弹幕（从云端留言生成）
+      function refreshDanmaku() {
+        // 清空现有弹幕（保留池）
+        while (danmakuContainer.firstChild) {
+          danmakuContainer.firstChild.remove();
+        }
         const allMessages = [];
         PROVINCE_LIST.forEach(prov => {
           (provinceData[prov]?.messages || []).forEach(m => {
-            allMessages.push({ province: prov, text: m.text, time: m.time });
+            allMessages.push({ text: `${prov} - ${m.text}`, time: m.time });
           });
         });
-        allMessages.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
-        const recent = allMessages.slice(0, 200);
-
-        recent.forEach(msg => {
-          const danmaku = document.createElement('div');
-          danmaku.className = 'danmaku-item';
-          danmaku.textContent = `${msg.province} - ${msg.text}`;
-          danmaku.style.left = (Math.random() * 90 + 5) + '%';
-          danmaku.style.top = (Math.random() * 80 + 10) + '%';
-          danmaku.style.fontSize = (16 + Math.floor(Math.random() * 10)) + 'px';
-          danmaku.style.animationDuration = (25 + Math.random() * 30) + 's';
-          danmakuContainer.appendChild(danmaku);
+        // 按时间排序
+        allMessages.sort((a,b) => (a.time||'').localeCompare(b.time||''));
+        // 限制数量
+        const messagesToShow = allMessages.slice(-MAX_DANMAKU);
+        messagesToShow.forEach(msg => {
+          spawnDanmaku(msg.text);
         });
       }
 
-      // 即时弹幕动画（从省份中心爆发）
-      function fireInstantDanmaku(provinceName, msg) {
-        if (!chart) return;
-        const center = PROVINCE_CENTERS[provinceName];
-        if (!center) return;
-        try {
-          const pixel = chart.convertToPixel({ seriesIndex: 0 }, center);
-          const rect = chart.getDom().getBoundingClientRect();
-          const startX = rect.left + pixel[0];
-          const startY = rect.top + pixel[1];
-
-          const danmaku = document.createElement('div');
-          danmaku.className = 'danmaku-item';
-          danmaku.textContent = msg;
-          danmaku.style.left = startX + 'px';
-          danmaku.style.top = startY + 'px';
-          danmaku.style.fontSize = '22px';
-          danmaku.style.color = '#fff';
-          danmaku.style.textShadow = '1px 1px 6px #1f4f12';
-          danmakuContainer.appendChild(danmaku);
-
-          const dx = (Math.random() - 0.5) * 200;
-          const dy = -120 - Math.random() * 100;
-          danmaku.animate([
-            { transform: 'translate(0,0) scale(0.8)', opacity: 1 },
-            { transform: `translate(${dx}px, ${dy}px) scale(1.2)`, opacity: 0 }
-          ], { duration: 2500, easing: 'ease-out', fill: 'forwards' }).onfinish = () => danmaku.remove();
-        } catch (e) {}
+      // 新增弹幕（立即出现）
+      function addNewDanmaku(provinceName, msg) {
+        const text = `${provinceName} - ${msg}`;
+        spawnDanmaku(text);
       }
 
+      // 彩蛋对话框
       function showMessageModal() {
         return new Promise((resolve) => {
-          msgModal.style.display = 'flex';
-          msgResolver = resolve;
+          modal.style.display = 'flex';
+          resolvePromise = resolve;
         });
       }
-
-      document.getElementById('msg-opt-1').addEventListener('click', () => {
-        if (msgResolver) msgResolver("张泽禹，生日快乐");
-        msgModal.style.display = 'none';
+      document.getElementById('modal-close-btn').addEventListener('click', () => {
+        if (resolvePromise) resolvePromise(null); // 关闭不选
+        modal.style.display = 'none';
       });
-      document.getElementById('msg-opt-2').addEventListener('click', () => {
-        if (msgResolver) msgResolver("我将永远陪伴张泽禹");
-        msgModal.style.display = 'none';
+      document.getElementById('msg-option-1').addEventListener('click', () => {
+        if (resolvePromise) resolvePromise("张泽禹，生日快乐");
+        modal.style.display = 'none';
       });
-
-      function showEasterModal() {
-        return new Promise((resolve) => {
-          easterModal.style.display = 'flex';
-          easterResolver = resolve;
-        });
-      }
-      document.getElementById('easter-close').addEventListener('click', () => {
-        if (easterResolver) easterResolver();
-        easterModal.style.display = 'none';
+      document.getElementById('msg-option-2').addEventListener('click', () => {
+        if (resolvePromise) resolvePromise("我将永远陪伴张泽禹");
+        modal.style.display = 'none';
       });
 
+      // 地图渲染
       function renderMap() {
         if (!chart) return;
-        const counts = Object.values(provinceData).map(d => d.count);
-        const max = Math.min(Math.max(...counts, 1), 430);
+        const counts = Object.values(provinceData).map(d=>d.count);
+        const max = Math.max(...counts, 1);
         const macaronGreen = [
           '#eaf7e3','#d4efc0','#bee5a8','#a8db90','#92d178',
           '#7cc760','#66bd48','#50b330','#3aa918','#249f00'
         ];
         chart.setOption({
-          tooltip: { trigger: 'item', formatter: (p) => `${p.name}<br/>💚 点亮: ${provinceData[p.name]?.count || 0} 次` },
+          tooltip: { trigger:'item', formatter: (p) => `${p.name}<br/>💚 点亮: ${provinceData[p.name]?.count||0} 次` },
           visualMap: {
-            min: 0, max: max, calculable: true,
-            inRange: { color: macaronGreen },
-            textStyle: { color: '#1d4512' },
-            seriesIndex: 0, showLabel: true, itemWidth: 18, itemHeight: 120, left: 'left', bottom: 20
+            min:0, max: max>430?430:max, calculable:true,
+            inRange:{ color: macaronGreen },
+            textStyle:{ color:'#1d4512' },
+            seriesIndex:0, showLabel:true, itemWidth:18, itemHeight:120, left:'left', bottom:20
           },
-          series: [{
-            type: 'map', map: 'china', roam: true, scaleLimit: { min: 0.8, max: 2.5 }, zoom: 1.1, center: [104, 35],
-            itemStyle: { borderColor: '#3b7525', areaColor: '#d4eac2', emphasis: { areaColor: '#b1e085' } },
-            label: { show: true, color: '#1e4a0b' },
-            data: PROVINCE_LIST.map(n => ({ name: n, value: provinceData[n].count }))
+          series:[{
+            type:'map', map:'china', roam:true, scaleLimit:{ min:0.8, max:2.5 }, zoom:1.1, center:[104,35],
+            itemStyle:{ borderColor:'#3b7525', areaColor:'#d4eac2', emphasis:{ areaColor:'#b1e085' } },
+            label:{ show:true, color:'#1e4a0b' },
+            data: PROVINCE_LIST.map(n=>({ name:n, value:provinceData[n].count }))
           }]
-        }, { notMerge: false });
+        });
       }
 
       function renderDetail(name) {
         const d = provinceData[name];
-        if (!d) return;
+        if(!d) return;
         document.getElementById('selectedProvinceName').innerText = name;
         document.getElementById('selectedProvinceClicks').innerText = `${d.count} 次${d.count>0?' 💚':''}`;
         const cont = document.getElementById('messageListContainer');
         const msgs = d.messages || [];
-        if (!msgs.length) cont.innerHTML = '<div class="empty-message">🌱 还没有留言，点击省份为泽禹送上祝福</div>';
-        else cont.innerHTML = [...msgs].reverse().map(m => `<div class="message-item"><span class="message-time">🕒 ${m.time||''}</span> “${m.text.replace(/</g,'&lt;')}”</div>`).join('');
+        if(!msgs.length) cont.innerHTML = '<div class="empty-message">🌱 还没有留言</div>';
+        else cont.innerHTML = [...msgs].reverse().map(m=>
+          `<div class="message-item"><span class="message-time">🕒 ${m.time||''}</span> “${m.text.replace(/</g,'&lt;')}”</div>`
+        ).join('');
       }
 
-      async function loadDataFromCloud(silent = true) {
+      // 云端数据加载
+      async function loadData(silent=true) {
         try {
-          if (!silent) syncStatusText.innerText = '⏳ 读取云端...';
-          let { data, error } = await supabase.from('province_stats').select('data').eq('id', 1).single();
-          if (error) throw error;
-          if (data && data.data) {
+          if(!silent) syncStatusText.innerText = '⏳ 读取云端...';
+          let { data, error } = await supabase.from('province_stats').select('data').eq('id',1).single();
+          if(error) throw error;
+          if(data && data.data) {
             const cloud = data.data;
             const complete = createEmptyData();
-            PROVINCE_LIST.forEach(n => { if (cloud[n]) complete[n] = cloud[n]; });
+            PROVINCE_LIST.forEach(n => { if(cloud[n]) complete[n] = cloud[n]; });
             provinceData = complete;
-            if (!silent) syncStatusText.innerText = '✅ 已连接云端 🎸';
+            if(!silent) syncStatusText.innerText = '✅ 已连接云端';
           } else {
             provinceData = createEmptyData();
-            await supabase.from('province_stats').upsert({ id: 1, data: provinceData, updated_at: new Date() });
-            if (!silent) syncStatusText.innerText = '✅ 云端已初始化 🎸';
+            await supabase.from('province_stats').upsert({ id:1, data:provinceData, updated_at: new Date() });
+            if(!silent) syncStatusText.innerText = '✅ 云端已初始化';
           }
-        } catch (e) {
+        } catch(e) {
           console.error(e);
-          if (!silent) syncStatusText.innerText = '⚠️ 离线模式';
+          if(!silent) syncStatusText.innerText = '⚠️ 离线模式';
           provinceData = createEmptyData();
         }
         renderMap();
         updateTotal();
         renderDetail(currentSelected);
-        renderAllDanmaku(); // 刷新弹幕
+        refreshDanmaku(); // 刷新弹幕
       }
 
       async function saveData() {
         try {
           syncStatusText.innerText = '⏳ 同步中...';
           const { error } = await supabase.from('province_stats')
-            .update({ data: provinceData, updated_at: new Date() })
-            .eq('id', 1);
-          if (error) throw error;
-          syncStatusText.innerText = '✅ 已同步 🎸';
-        } catch (e) {
+            .update({ data:provinceData, updated_at: new Date() })
+            .eq('id',1);
+          if(error) throw error;
+          syncStatusText.innerText = '✅ 已同步';
+        } catch(e) {
           syncStatusText.innerText = '⚠️ 保存失败';
         }
       }
 
       async function onProvinceClick(name) {
-        if (!provinceData.hasOwnProperty(name)) {
-          alert('🌟 此区域为中国固有领土，请点击具体省份留下祝福～');
+        if(!provinceData.hasOwnProperty(name)) {
+          if(name.includes('南海')||name.includes('诸岛')) alert('🌟 南海诸岛是中国固有领土，请点击省份留下祝福～');
           return;
         }
         provinceData[name].count += 1;
-
-        const chosenMsg = await showMessageModal();
-        const timeStr = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-        provinceData[name].messages.push({ text: chosenMsg, time: timeStr });
-
-        fireInstantDanmaku(name, `${name} - ${chosenMsg}`);
-
+        const chosen = await showMessageModal();
+        if(!chosen) return; // 用户关闭了弹窗
+        const timeStr = new Date().toLocaleTimeString('zh-CN',{ hour12:false });
+        provinceData[name].messages.push({ text: chosen, time: timeStr });
+        addNewDanmaku(name, chosen);
         await saveData();
-        await showEasterModal();
-
         currentSelected = name;
         renderMap();
         updateTotal();
         renderDetail(name);
-        renderAllDanmaku();
       }
 
       function initChart() {
         chart = echarts.init(document.getElementById('chinaMap'));
-        chart.on('click', (p) => { if (p.componentType === 'series') onProvinceClick(p.name); });
+        chart.on('click', (p) => { if(p.componentType==='series') onProvinceClick(p.name); });
         window.addEventListener('resize', () => chart.resize());
         provinceData = createEmptyData();
         renderMap();
       }
 
+      // 实时订阅
       function setupRealtime() {
-        supabase
-          .channel('province_stats_changes')
-          .on('postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'province_stats', filter: 'id=eq.1' },
-            (payload) => {
-              loadDataFromCloud(true);
-            }
-          )
-          .subscribe((status) => {
-            if (status === 'CHANNEL_ERROR') {
-              setTimeout(() => setupRealtime(), 5000);
-            }
-          });
+        supabase.channel('province_stats_changes')
+          .on('postgres_changes', { event:'UPDATE', schema:'public', table:'province_stats', filter:'id=eq.1' },
+            () => loadData(true))
+          .subscribe();
+      }
+
+      // 拖拽星光守则
+      function makeDraggable(el) {
+        let offsetX, offsetY, isDown = false;
+        el.addEventListener('mousedown', (e) => {
+          if(e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+          isDown = true;
+          offsetX = e.clientX - el.offsetLeft;
+          offsetY = e.clientY - el.offsetTop;
+          el.style.position = 'absolute';
+        });
+        document.addEventListener('mousemove', (e) => {
+          if(!isDown) return;
+          e.preventDefault();
+          el.style.left = (e.clientX - offsetX) + 'px';
+          el.style.top = (e.clientY - offsetY) + 'px';
+        });
+        document.addEventListener('mouseup', () => { isDown = false; });
+        // 移动端支持
+        el.addEventListener('touchstart', (e) => {
+          const touch = e.touches[0];
+          offsetX = touch.clientX - el.offsetLeft;
+          offsetY = touch.clientY - el.offsetTop;
+          isDown = true;
+        }, {passive: false});
+        document.addEventListener('touchmove', (e) => {
+          if(!isDown) return;
+          const touch = e.touches[0];
+          el.style.left = (touch.clientX - offsetX) + 'px';
+          el.style.top = (touch.clientY - offsetY) + 'px';
+        });
+        document.addEventListener('touchend', () => { isDown = false; });
       }
 
       async function start() {
         initChart();
-        await loadDataFromCloud(false);
+        await loadData(false);
         setupRealtime();
-        setInterval(() => loadDataFromCloud(true), 20000);
+        // 拖拽
+        makeDraggable(document.getElementById('notice-corner-draggable'));
       }
-
       start();
     })();
   </script>
