@@ -17,7 +17,7 @@
       align-items: flex-start;
       padding: 20px;
       position: relative;
-      overflow-y: auto; /* 允许页面下拉 */
+      overflow-y: auto;
     }
     .map-card {
       width: 1300px;
@@ -55,16 +55,22 @@
     .message-time { font-size: 0.7rem; color: #557a3e; margin-right: 8px; }
     .empty-message { color: #6f8f60; font-style: italic; padding: 12px 6px; text-align: center; }
     .hint-click { font-size: 0.85rem; margin-left: 12px; color: #3e6b2b; }
-    /* 弹幕容器 - 覆盖全屏，不阻挡点击 */
+    /* 弹幕容器 */
     #danmaku-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; }
-    .danmaku-item { position: absolute; white-space: nowrap; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); pointer-events: none; will-change: transform, opacity; }
-    /* 弹幕动画：从点击位置向上飘，逐渐透明 */
-    @keyframes danmaku-float {
-      0% { transform: translate(0, 0) scale(0.8); opacity: 0.9; }
-      10% { opacity: 0.7; }
-      100% { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0.1; }
+    .danmaku-item { position: absolute; white-space: nowrap; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); pointer-events: none; will-change: transform; opacity: 0.8; }
+    /* 永久弹幕动画：缓慢上升并左右微摆，无限循环 */
+    @keyframes danmaku-float-permanent {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(30px, -50px) rotate(1deg); }
+      50% { transform: translate(-20px, -120px) rotate(-1deg); }
+      75% { transform: translate(10px, -180px) rotate(0.5deg); }
+      100% { transform: translate(0, -250px) rotate(0deg); }
     }
-    /* 自定义模态框 - 马卡龙绿色系 */
+    .danmaku-permanent {
+      animation: danmaku-float-permanent 60s linear infinite;
+      opacity: 0.6;
+    }
+    /* 模态框样式保持 */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; justify-content: center; align-items: center; }
     .modal-content { background: #eaf7e3; border-radius: 36px; padding: 30px; text-align: center; box-shadow: 0 15px 30px rgba(30, 60, 10, 0.25); border: 2px solid #8bc34a; max-width: 420px; color: #1e4216; }
     .modal-content p { font-size: 1.4rem; margin-bottom: 20px; font-weight: 600; color: #1f4f12; }
@@ -77,7 +83,6 @@
   </style>
 </head>
 <body>
-  <!-- 弹幕层 -->
   <div id="danmaku-container"></div>
 
   <!-- 祝福选择模态框 -->
@@ -89,7 +94,7 @@
     </div>
   </div>
 
-  <!-- 彩蛋模态框（手动关闭） -->
+  <!-- 彩蛋模态框 -->
   <div id="easter-modal" class="modal-overlay">
     <div class="modal-content">
       <p>漫山遍野的星光，皆为张泽禹而来</p>
@@ -107,7 +112,7 @@
         <span style="font-weight:600;">🎸 云端实时同步 🎸</span><br>
         <span id="syncStatusText" class="sync-badge" style="background:#c8e6b5;">⏳ 连接中...</span>
         <div class="real-time-clock">
-          <span></span> <span id="live-time">--:--:--</span>
+          <span>🎂</span> <span id="live-time">--:--:--</span>
         </div>
       </div>
     </div>
@@ -135,12 +140,10 @@
     (function(){
       "use strict";
 
-      // Supabase 配置（已填写）
       const SUPABASE_URL = 'https://gizmhqjgffirzavlxbjs.supabase.co';
       const SUPABASE_ANON_KEY = 'sb_publishable_HMmjvtwiqJmtC67WSiQtkQ_iMlL7snW';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // 完整省份列表（含澳门、香港、台湾、南海诸岛）
       const PROVINCE_LIST = [
         "北京","天津","上海","重庆","河北","山西","辽宁","吉林","黑龙江",
         "江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南",
@@ -148,7 +151,6 @@
         "内蒙古","广西","西藏","宁夏","新疆","香港","澳门","南海诸岛"
       ];
 
-      // 省份中心坐标（用于弹幕起始位置）
       const PROVINCE_CENTERS = {
         "北京": [116.46,39.92],"天津":[117.2,39.13],"上海":[121.48,31.22],
         "重庆":[106.54,29.59],"河北":[114.48,38.03],"山西":[112.53,37.87],
@@ -169,22 +171,18 @@
       let chart = null;
       const syncStatusText = document.getElementById('syncStatusText');
       const danmakuContainer = document.getElementById('danmaku-container');
-
-      // 模态框元素
       const msgModal = document.getElementById('msg-modal');
       const easterModal = document.getElementById('easter-modal');
-      let msgResolver = null;   // 祝福选择 resolve
-      let easterResolver = null; // 彩蛋关闭 resolve
+      let msgResolver = null;
+      let easterResolver = null;
 
       // 实时时钟
       function updateClock() {
-        const now = new Date();
-        document.getElementById('live-time').innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
+        document.getElementById('live-time').innerText = new Date().toLocaleTimeString('zh-CN', { hour12: false });
       }
       setInterval(updateClock, 1000);
       updateClock();
 
-      // 初始化数据
       function createEmptyData() {
         const data = {};
         PROVINCE_LIST.forEach(n => data[n] = { count: 0, messages: [] });
@@ -199,51 +197,67 @@
         document.getElementById('totalClicksDisplay').innerText = calcTotal();
       }
 
-      // 弹幕：永久留存，从省份中心向外辐射，总体上升，逐渐透明
-      function fireDanmaku(provinceName, msg) {
-        if (!chart || !danmakuContainer) return;
+      // 渲染永久弹幕（从云数据读取所有留言，取最新200条）
+      function renderAllDanmaku() {
+        danmakuContainer.innerHTML = ''; // 清空容器
+        const allMessages = [];
+        PROVINCE_LIST.forEach(prov => {
+          const msgs = provinceData[prov]?.messages || [];
+          msgs.forEach(m => {
+            allMessages.push({ province: prov, text: m.text, time: m.time });
+          });
+        });
+        // 按时间倒序，取最新200条
+        allMessages.sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+        const recent = allMessages.slice(0, 200);
+
+        recent.forEach(msg => {
+          const danmaku = document.createElement('div');
+          danmaku.className = 'danmaku-item danmaku-permanent';
+          danmaku.textContent = `${msg.province} - ${msg.text}`;
+          // 随机起始位置（避免全挤在一起）
+          danmaku.style.left = (Math.random() * 90 + 5) + '%';
+          danmaku.style.top = (Math.random() * 80 + 10) + '%';
+          danmaku.style.fontSize = (16 + Math.floor(Math.random() * 10)) + 'px';
+          // 随机动画时长，使飘动节奏错落
+          danmaku.style.animationDuration = (40 + Math.random() * 40) + 's';
+          danmakuContainer.appendChild(danmaku);
+        });
+      }
+
+      // 即时弹幕动画（点击时从省份中心飘出，作为视觉反馈，同时已经通过renderAllDanmaku管理永久弹幕，这里额外增加一条临时效果）
+      function fireInstantDanmaku(provinceName, msg) {
+        if (!chart) return;
         const center = PROVINCE_CENTERS[provinceName];
-        // 如果没有中心坐标，采用随机位置
-        const useRandom = !center;
-        let startX, startY;
-        if (!useRandom) {
-          try {
-            const pixel = chart.convertToPixel({ seriesIndex: 0 }, center);
-            const rect = chart.getDom().getBoundingClientRect();
-            startX = rect.left + pixel[0];
-            startY = rect.top + pixel[1];
-          } catch (e) {
-            useRandom = true;
-          }
-        }
-        if (useRandom) {
-          startX = Math.random() * window.innerWidth;
-          startY = Math.random() * window.innerHeight * 0.7 + 100;
-        }
+        if (!center) return;
+        try {
+          const pixel = chart.convertToPixel({ seriesIndex: 0 }, center);
+          const rect = chart.getDom().getBoundingClientRect();
+          const startX = rect.left + pixel[0];
+          const startY = rect.top + pixel[1];
 
-        const danmaku = document.createElement('div');
-        danmaku.className = 'danmaku-item';
-        danmaku.textContent = msg;
-        danmaku.style.left = startX + 'px';
-        danmaku.style.top = startY + 'px';
-        danmaku.style.fontSize = (16 + Math.floor(Math.random() * 10)) + 'px';
-        danmaku.style.color = '#ffffff';
-        // 随机水平偏移和上升距离
-        const dx = (Math.random() - 0.5) * 300; // 水平飘移 -150~150px
-        const dy = -200 - Math.random() * 300;  // 向上飘 200~500px
-        danmaku.style.setProperty('--dx', dx + 'px');
-        danmaku.style.setProperty('--dy', dy + 'px');
-        danmaku.style.animation = 'danmaku-float 25s linear forwards';
-        danmakuContainer.appendChild(danmaku);
+          const danmaku = document.createElement('div');
+          danmaku.className = 'danmaku-item';
+          danmaku.textContent = msg;
+          danmaku.style.left = startX + 'px';
+          danmaku.style.top = startY + 'px';
+          danmaku.style.fontSize = '20px';
+          danmaku.style.color = '#fff';
+          danmaku.style.textShadow = '1px 1px 4px #1f4f12';
+          danmakuContainer.appendChild(danmaku);
 
-        // 限制弹幕总数，超过150条则移除最早的一条
-        const allDanmaku = danmakuContainer.querySelectorAll('.danmaku-item');
-        if (allDanmaku.length > 150) {
-          allDanmaku[0].remove();
+          // 动画：从点击位置快速飘出并消失
+          const dx = (Math.random() - 0.5) * 200;
+          const dy = -100 - Math.random() * 100;
+          danmaku.animate([
+            { transform: 'translate(0,0) scale(1)', opacity: 1 },
+            { transform: `translate(${dx}px, ${dy}px) scale(1.3)`, opacity: 0 }
+          ], { duration: 2500, easing: 'ease-out', fill: 'forwards' }).onfinish = () => danmaku.remove();
+        } catch (e) {
+          console.warn('即时弹幕失败', e);
         }
       }
 
-      // 祝福选择模态框
       function showMessageModal() {
         return new Promise((resolve) => {
           msgModal.style.display = 'flex';
@@ -260,7 +274,6 @@
         msgModal.style.display = 'none';
       });
 
-      // 彩蛋模态框（手动关闭）
       function showEasterModal() {
         return new Promise((resolve) => {
           easterModal.style.display = 'flex';
@@ -273,7 +286,6 @@
         easterModal.style.display = 'none';
       });
 
-      // 渲染地图（马卡龙绿色系，上限430）
       function renderMap() {
         if (!chart) return;
         const counts = Object.values(provinceData).map(d => d.count);
@@ -310,7 +322,6 @@
         else cont.innerHTML = [...msgs].reverse().map(m => `<div class="message-item"><span class="message-time">🕒 ${m.time||''}</span> “${m.text.replace(/</g,'&lt;')}”</div>`).join('');
       }
 
-      // 云端数据加载
       async function loadDataFromCloud(silent = true) {
         try {
           if (!silent) syncStatusText.innerText = '⏳ 读取云端...';
@@ -335,6 +346,8 @@
         renderMap();
         updateTotal();
         renderDetail(currentSelected);
+        // 关键：每次加载数据后重新渲染永久弹幕
+        renderAllDanmaku();
       }
 
       async function saveData() {
@@ -350,7 +363,6 @@
         }
       }
 
-      // 省份点击处理
       async function onProvinceClick(name) {
         if (!provinceData.hasOwnProperty(name)) {
           alert('🌟 此区域为中国固有领土，请点击具体省份留下祝福～');
@@ -358,24 +370,25 @@
         }
         provinceData[name].count += 1;
 
-        // 第一步：弹出祝福选择框
         const chosenMsg = await showMessageModal();
         const timeStr = new Date().toLocaleTimeString('zh-CN', { hour12: false });
         provinceData[name].messages.push({ text: chosenMsg, time: timeStr });
 
-        // 发射弹幕
-        fireDanmaku(name, `${name} - ${chosenMsg}`);
+        // 即时弹幕动画
+        fireInstantDanmaku(name, `${name} - ${chosenMsg}`);
 
         // 保存到云端
         await saveData();
 
-        // 第二步：弹出彩蛋，需要手动关闭
+        // 弹出彩蛋
         await showEasterModal();
 
         currentSelected = name;
         renderMap();
         updateTotal();
         renderDetail(name);
+        // 保存后立即更新永久弹幕
+        renderAllDanmaku();
       }
 
       function initChart() {
@@ -386,18 +399,29 @@
         renderMap();
       }
 
-      // 实时订阅
       function setupRealtime() {
-        supabase.channel('province_stats_changes')
-          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'province_stats', filter: 'id=eq.1' },
-            () => loadDataFromCloud(true))
-          .subscribe();
+        supabase
+          .channel('province_stats_changes')
+          .on('postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'province_stats', filter: 'id=eq.1' },
+            (payload) => {
+              console.log('实时更新触发!', payload);
+              loadDataFromCloud(true);
+            }
+          )
+          .subscribe((status) => {
+            if (status === 'CHANNEL_ERROR') {
+              setTimeout(() => setupRealtime(), 5000);
+            }
+          });
       }
 
       async function start() {
         initChart();
         await loadDataFromCloud(false);
         setupRealtime();
+        // 额外定时轮询作为保险（每20秒同步一次）
+        setInterval(() => loadDataFromCloud(true), 20000);
       }
 
       start();
