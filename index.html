@@ -3,166 +3,405 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>引力枢纽 · 张泽禹生日·诊断版</title>
+  <title>引力枢纽 · 张泽禹生日·全国星光地图</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/js/china.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* 样式保持不变（与上一版完全相同），此处省略以节省篇幅，请确保您复制的是完整版 */
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, sans-serif; }
-    body { background: linear-gradient(145deg, #f7fff0 0%, #e2f3d5 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .map-card { width: 1300px; max-width: 100%; background: rgba(255,255,255,0.75); backdrop-filter: blur(12px); border-radius: 48px; padding: 24px 28px; border: 1px solid rgba(120,180,90,0.25); position: relative; }
-    .creator-signature { position: absolute; top: 22px; left: 30px; font-weight: 600; font-size: 1.5rem; color: #2b5e1c; background: rgba(220,250,200,0.6); padding: 6px 22px; border-radius: 60px; }
-    .notice-corner { position: absolute; bottom: 26px; right: 32px; background: #fafff7; padding: 14px 22px; border-radius: 36px 12px; border-left: 6px solid #6da546; max-width: 320px; color: #1e4216; font-size: 0.9rem; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #f7fff0 0%, #e2f3d5 100%);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+      position: relative;
+      overflow-y: auto; /* 允许页面下拉 */
+    }
+    .map-card {
+      width: 1300px;
+      max-width: 100%;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 48px;
+      box-shadow: 0 20px 40px rgba(40, 70, 30, 0.15);
+      padding: 24px 28px 30px;
+      border: 1px solid rgba(120, 180, 90, 0.25);
+      position: relative;
+      z-index: 10;
+      margin-bottom: 20px;
+    }
+    .creator-signature { position: absolute; top: 22px; left: 30px; font-weight: 600; font-size: 1.5rem; letter-spacing: 2px; color: #2b5e1c; text-shadow: 2px 2px 0 #e5ffd9; background: rgba(220, 250, 200, 0.6); padding: 6px 22px; border-radius: 60px; backdrop-filter: blur(5px); border: 1px solid #9fcc8b; z-index: 15; }
+    .creator-signature span { font-weight: 300; font-size: 0.9rem; margin-left: 6px; color: #3f7840; }
+    .notice-corner { position: absolute; bottom: 26px; right: 32px; background: #fafff7; padding: 14px 22px; border-radius: 36px 12px 36px 12px; box-shadow: 0 8px 12px rgba(60, 90, 30, 0.08); border-left: 6px solid #6da546; max-width: 340px; backdrop-filter: blur(4px); color: #1e4216; font-size: 0.9rem; line-height: 1.5; z-index: 15; }
+    .notice-corner strong { font-size: 1rem; color: #2f6b1c; display: block; margin-bottom: 6px; }
+    .sync-badge { margin-top: 8px; background: #d4eac2; border-radius: 20px; padding: 6px 12px; font-size: 0.85rem; display: inline-block; color: #1d4e0e; }
     .title-badge { text-align: center; margin-bottom: 8px; }
-    #chinaMap { width: 100%; height: 540px; border-radius: 32px; background: #e6f7dd; }
-    .info-panel { display: flex; gap: 20px; margin-top: 16px; }
-    .total-clicks-card { flex: 1.2; background: #dff0d3; border-radius: 60px 20px; padding: 16px 26px; display: flex; align-items: center; justify-content: space-between; }
-    .total-number { font-size: 3.4rem; background: #1f4f12; color: #f3ffe7; padding: 6px 24px; border-radius: 60px; }
-    .province-detail { flex: 2.2; background: #f5fff0; border-radius: 30px 12px; padding: 16px 22px; }
-    .message-section { max-height: 150px; overflow-y: auto; }
-    .sync-badge { margin-top: 8px; background: #d4eac2; border-radius: 20px; padding: 6px 12px; display: inline-block; }
+    .title-badge h2 { font-weight: 500; color: #2b5a1e; letter-spacing: 4px; font-size: 1.3rem; }
+    .title-badge h2 i { font-style: normal; background: #a6d68e; padding: 2px 14px; border-radius: 40px; color: #1a3f0e; }
+    #chinaMap { width: 100%; height: 540px; border-radius: 32px; background: #e6f7dd; box-shadow: inset 0 0 0 1px rgba(80, 130, 50, 0.2), 0 6px 14px rgba(0, 20, 0, 0.05); margin: 8px 0 12px; }
+    .info-panel { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 16px; }
+    .total-clicks-card { flex: 1.2; min-width: 240px; background: #dff0d3; border-radius: 60px 20px 60px 20px; padding: 16px 26px; box-shadow: 0 6px 0 #7da064; border: 1px solid #b1d89c; display: flex; align-items: center; justify-content: space-between; }
+    .total-label { font-size: 1.5rem; font-weight: 700; color: #1c4210; display: flex; align-items: center; gap: 10px; }
+    .total-number { font-size: 3.4rem; font-weight: 800; background: #1f4f12; color: #f3ffe7; padding: 6px 24px; border-radius: 60px; letter-spacing: 2px; box-shadow: inset 0 -2px 0 #b1e09a, 0 4px 0 #0f2a07; }
+    .province-detail { flex: 2.2; background: #f5fff0; border-radius: 30px 12px 30px 12px; padding: 16px 22px; border: 1px solid #b1da9a; box-shadow: 0 4px 8px rgba(50, 80, 20, 0.08); backdrop-filter: blur(2px); min-width: 320px; }
+    .province-header { display: flex; align-items: baseline; gap: 20px; border-bottom: 2px dashed #9bc181; padding-bottom: 10px; margin-bottom: 14px; }
+    .current-province { font-size: 2rem; font-weight: 700; color: #1a4f0e; }
+    .province-clicks { font-size: 1.4rem; background: #c8e6b5; padding: 4px 18px; border-radius: 40px; color: #173d0a; font-weight: 600; }
+    .message-section { max-height: 200px; overflow-y: auto; padding-right: 8px; border: 1px solid #b1d89c; border-radius: 12px; padding: 12px; background: rgba(255,255,255,0.6); }
+    .message-item { background: #ffffffc9; margin-bottom: 8px; padding: 8px 16px; border-radius: 28px 8px 28px 8px; border-left: 6px solid #6fa84a; font-size: 0.95rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); word-break: break-word; }
+    .message-time { font-size: 0.7rem; color: #557a3e; margin-right: 8px; }
+    .empty-message { color: #6f8f60; font-style: italic; padding: 12px 6px; text-align: center; }
+    .hint-click { font-size: 0.85rem; margin-left: 12px; color: #3e6b2b; }
+    /* 弹幕容器 - 覆盖全屏，不阻挡点击 */
+    #danmaku-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; }
+    .danmaku-item { position: absolute; white-space: nowrap; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); pointer-events: none; will-change: transform, opacity; }
+    /* 弹幕动画：从点击位置向上飘，逐渐透明 */
+    @keyframes danmaku-float {
+      0% { transform: translate(0, 0) scale(0.8); opacity: 0.9; }
+      10% { opacity: 0.7; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0.1; }
+    }
+    /* 自定义模态框 - 马卡龙绿色系 */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; justify-content: center; align-items: center; }
+    .modal-content { background: #eaf7e3; border-radius: 36px; padding: 30px; text-align: center; box-shadow: 0 15px 30px rgba(30, 60, 10, 0.25); border: 2px solid #8bc34a; max-width: 420px; color: #1e4216; }
+    .modal-content p { font-size: 1.4rem; margin-bottom: 20px; font-weight: 600; color: #1f4f12; }
+    .modal-content button { background: #6da546; color: white; border: none; padding: 12px 28px; margin: 10px; border-radius: 30px; font-size: 1.1rem; cursor: pointer; transition: background 0.2s; }
+    .modal-content button:hover { background: #4d7a2c; }
+    .modal-content .close-btn { background: transparent; color: #2b5e1c; border: 2px solid #6da546; margin-top: 20px; }
+    .modal-content .close-btn:hover { background: #6da546; color: white; }
+    .real-time-clock { font-size: 0.85rem; color: #3e6b2b; display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+    @media (max-width: 700px) { .map-card { padding: 16px; } .creator-signature { font-size: 1.1rem; top: 12px; left: 16px; } .notice-corner { bottom: 12px; right: 16px; padding: 10px 14px; } #chinaMap { height: 400px; } .total-number { font-size: 2.4rem; } }
   </style>
 </head>
 <body>
-<div class="map-card">
-  <div class="creator-signature">引力枢纽 <span>· 张泽禹生日献礼</span></div>
-  <div class="notice-corner">
-    <strong>✨ 星光守则 ✨</strong>
-    <p>① 此网站专注于庆祝张泽禹生日，切勿留其他留言。</p>
-    <p>② 点击次数越多，该省份越亮，证明喜欢泽禹的人越多 💚</p>
-    <div style="margin-top:12px;border-top:1px dashed #9bc181;padding-top:8px;">
-      <span style="font-weight:600;">🌐 诊断状态</span><br>
-      <span id="syncStatusText" class="sync-badge">⏳ 检测中...</span>
+  <!-- 弹幕层 -->
+  <div id="danmaku-container"></div>
+
+  <!-- 祝福选择模态框 -->
+  <div id="msg-modal" class="modal-overlay">
+    <div class="modal-content">
+      <p>✨ 请选择你的祝福 ✨</p>
+      <button id="msg-opt-1">张泽禹，生日快乐</button>
+      <button id="msg-opt-2">我将永远陪伴张泽禹</button>
     </div>
   </div>
-  <div class="title-badge"><h2><i>🗺️ 泽禹 · 绿色星光点亮中国</i></h2></div>
-  <div id="chinaMap"></div>
-  <div class="info-panel">
-    <div class="total-clicks-card"><span class="total-label">🌿 全国总点亮</span><span class="total-number" id="totalClicksDisplay">0</span></div>
-    <div class="province-detail">
-      <div class="province-header"><span class="current-province" id="selectedProvinceName">点击省份</span><span class="province-clicks" id="selectedProvinceClicks">0 次</span></div>
-      <div class="message-section" id="messageListContainer"><div class="empty-message">✨ 点击任意省份，留下祝福</div></div>
+
+  <!-- 彩蛋模态框（手动关闭） -->
+  <div id="easter-modal" class="modal-overlay">
+    <div class="modal-content">
+      <p>漫山遍野的星光，皆为张泽禹而来</p>
+      <button class="close-btn" id="easter-close">关闭 💚</button>
     </div>
   </div>
-</div>
-<script>
-  (function(){
-    "use strict";
-    // 配置
-    const SUPABASE_URL = 'https://gizmhqjgfirzavlxbjs.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_HMmjvtwiqJmtC67WsIqtkQ_iMlL7snW';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    const PROVINCE_LIST = ["北京","天津","上海","重庆","河北","山西","辽宁","吉林","黑龙江","江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南","广东","海南","四川","贵州","云南","陕西","甘肃","青海","台湾","内蒙古","广西","西藏","宁夏","新疆","香港","澳门"];
-    let provinceData = {};
-    let currentSelected = "北京";
-    let chart = null;
-    const syncStatusText = document.getElementById('syncStatusText');
 
-    function createEmptyData() {
-      const data = {};
-      PROVINCE_LIST.forEach(n => data[n] = { count: 0, messages: [] });
-      return data;
-    }
+  <div class="map-card">
+    <div class="creator-signature">引力枢纽 <span>· 张泽禹生日献礼</span></div>
+    <div class="notice-corner">
+      <strong>✨ 星光守则 ✨</strong>
+      <p>① 此网站专注于庆祝张泽禹生日。</p>
+      <p>② 点击次数越多，该省份越亮，<br>　证明喜欢泽禹的人越多 💚</p>
+      <div style="margin-top:12px;border-top:1px dashed #9bc181;padding-top:8px;">
+        <span style="font-weight:600;">🎸 云端实时同步 🎸</span><br>
+        <span id="syncStatusText" class="sync-badge" style="background:#c8e6b5;">⏳ 连接中...</span>
+        <div class="real-time-clock">
+          <span></span> <span id="live-time">--:--:--</span>
+        </div>
+      </div>
+    </div>
+    <div class="title-badge"><h2><i>🗺️ 泽禹 · 光迹（全国可点·实时同步）</i></h2></div>
+    <div id="chinaMap"></div>
+    <div class="info-panel">
+      <div class="total-clicks-card">
+        <span class="total-label">🎸 全国总点亮</span>
+        <span class="total-number" id="totalClicksDisplay">0</span>
+      </div>
+      <div class="province-detail">
+        <div class="province-header">
+          <span class="current-province" id="selectedProvinceName">点击省份</span>
+          <span class="province-clicks" id="selectedProvinceClicks">0 次</span>
+          <span class="hint-click">💬 点击弹出彩蛋</span>
+        </div>
+        <div class="message-section" id="messageListContainer">
+          <div class="empty-message">✨ 点击任意省份，留下对泽禹的祝福 ✨</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    async function loadFromSupabase() {
-      try {
-        syncStatusText.innerText = '⏳ 查询中...';
-        const { data, error } = await supabase.from('province_stats').select('data').eq('id', 1).single();
-        if (error) {
-          syncStatusText.innerText = '❌ 查询错误: ' + error.message;
-          console.error(error);
-          throw error;
-        }
-        if (data && data.data) {
-          const cloud = data.data;
-          const complete = createEmptyData();
-          PROVINCE_LIST.forEach(n => { if (cloud[n]) complete[n] = cloud[n]; });
-          provinceData = complete;
-          syncStatusText.innerText = '✅ 已连接云端';
-        } else {
-          syncStatusText.innerText = '⚠️ 表中无数据，尝试插入...';
-          provinceData = createEmptyData();
-          const { error: insertError } = await supabase.from('province_stats').insert({ id: 1, data: provinceData });
-          if (insertError) {
-            syncStatusText.innerText = '❌ 插入失败: ' + insertError.message;
-          } else {
-            syncStatusText.innerText = '✅ 已初始化云端';
+  <script>
+    (function(){
+      "use strict";
+
+      // Supabase 配置（已填写）
+      const SUPABASE_URL = 'https://gizmhqjgffirzavlxbjs.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_HMmjvtwiqJmtC67WSiQtkQ_iMlL7snW';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // 完整省份列表（含澳门、香港、台湾、南海诸岛）
+      const PROVINCE_LIST = [
+        "北京","天津","上海","重庆","河北","山西","辽宁","吉林","黑龙江",
+        "江苏","浙江","安徽","福建","江西","山东","河南","湖北","湖南",
+        "广东","海南","四川","贵州","云南","陕西","甘肃","青海","台湾",
+        "内蒙古","广西","西藏","宁夏","新疆","香港","澳门","南海诸岛"
+      ];
+
+      // 省份中心坐标（用于弹幕起始位置）
+      const PROVINCE_CENTERS = {
+        "北京": [116.46,39.92],"天津":[117.2,39.13],"上海":[121.48,31.22],
+        "重庆":[106.54,29.59],"河北":[114.48,38.03],"山西":[112.53,37.87],
+        "辽宁":[123.38,41.8],"吉林":[125.35,43.88],"黑龙江":[126.63,45.75],
+        "江苏":[118.78,32.04],"浙江":[120.19,30.26],"安徽":[117.27,31.86],
+        "福建":[119.3,26.08],"江西":[115.89,28.68],"山东":[117.0,36.65],
+        "河南":[113.65,34.76],"湖北":[114.31,30.52],"湖南":[112.98,28.19],
+        "广东":[113.23,23.16],"海南":[110.35,20.02],"四川":[104.06,30.67],
+        "贵州":[106.71,26.57],"云南":[102.73,25.04],"陕西":[108.95,34.27],
+        "甘肃":[103.73,36.03],"青海":[101.74,36.56],"台湾":[121.5,25.05],
+        "内蒙古":[111.65,40.82],"广西":[108.33,22.84],"西藏":[91.11,29.97],
+        "宁夏":[106.27,38.47],"新疆":[87.68,43.77],"香港":[114.17,22.28],
+        "澳门":[113.55,22.19],"南海诸岛":[112.3,16.8]
+      };
+
+      let provinceData = {};
+      let currentSelected = "北京";
+      let chart = null;
+      const syncStatusText = document.getElementById('syncStatusText');
+      const danmakuContainer = document.getElementById('danmaku-container');
+
+      // 模态框元素
+      const msgModal = document.getElementById('msg-modal');
+      const easterModal = document.getElementById('easter-modal');
+      let msgResolver = null;   // 祝福选择 resolve
+      let easterResolver = null; // 彩蛋关闭 resolve
+
+      // 实时时钟
+      function updateClock() {
+        const now = new Date();
+        document.getElementById('live-time').innerText = now.toLocaleTimeString('zh-CN', { hour12: false });
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // 初始化数据
+      function createEmptyData() {
+        const data = {};
+        PROVINCE_LIST.forEach(n => data[n] = { count: 0, messages: [] });
+        return data;
+      }
+
+      function calcTotal() {
+        return Object.values(provinceData).reduce((s, i) => s + i.count, 0);
+      }
+
+      function updateTotal() {
+        document.getElementById('totalClicksDisplay').innerText = calcTotal();
+      }
+
+      // 弹幕：永久留存，从省份中心向外辐射，总体上升，逐渐透明
+      function fireDanmaku(provinceName, msg) {
+        if (!chart || !danmakuContainer) return;
+        const center = PROVINCE_CENTERS[provinceName];
+        // 如果没有中心坐标，采用随机位置
+        const useRandom = !center;
+        let startX, startY;
+        if (!useRandom) {
+          try {
+            const pixel = chart.convertToPixel({ seriesIndex: 0 }, center);
+            const rect = chart.getDom().getBoundingClientRect();
+            startX = rect.left + pixel[0];
+            startY = rect.top + pixel[1];
+          } catch (e) {
+            useRandom = true;
           }
         }
-      } catch (e) {
-        syncStatusText.innerText = '⚠️ 离线模式: ' + (e.message || '网络错误');
-        provinceData = createEmptyData();
-      }
-      renderMap();
-      updateTotalDisplay();
-      renderProvinceDetail(currentSelected);
-    }
+        if (useRandom) {
+          startX = Math.random() * window.innerWidth;
+          startY = Math.random() * window.innerHeight * 0.7 + 100;
+        }
 
-    function renderMap() {
-      if (!chart) return;
-      const maxCount = Math.max(...Object.values(provinceData).map(d => d.count), 1);
-      chart.setOption({
-        series: [{
-          type: 'map', map: 'china', roam: true, zoom: 1.1, center: [104, 35],
-          itemStyle: { borderColor: '#3b7525', areaColor: '#d4eac2' },
-          label: { show: true, color: '#1e4a0b' },
-          data: PROVINCE_LIST.map(n => ({ name: n, value: provinceData[n].count }))
-        }],
-        visualMap: { min: 0, max: maxCount, inRange: { color: ['#d2efc0','#a1d884','#6bb84a','#3b9620','#1f6e0a'] } }
+        const danmaku = document.createElement('div');
+        danmaku.className = 'danmaku-item';
+        danmaku.textContent = msg;
+        danmaku.style.left = startX + 'px';
+        danmaku.style.top = startY + 'px';
+        danmaku.style.fontSize = (16 + Math.floor(Math.random() * 10)) + 'px';
+        danmaku.style.color = '#ffffff';
+        // 随机水平偏移和上升距离
+        const dx = (Math.random() - 0.5) * 300; // 水平飘移 -150~150px
+        const dy = -200 - Math.random() * 300;  // 向上飘 200~500px
+        danmaku.style.setProperty('--dx', dx + 'px');
+        danmaku.style.setProperty('--dy', dy + 'px');
+        danmaku.style.animation = 'danmaku-float 25s linear forwards';
+        danmakuContainer.appendChild(danmaku);
+
+        // 限制弹幕总数，超过150条则移除最早的一条
+        const allDanmaku = danmakuContainer.querySelectorAll('.danmaku-item');
+        if (allDanmaku.length > 150) {
+          allDanmaku[0].remove();
+        }
+      }
+
+      // 祝福选择模态框
+      function showMessageModal() {
+        return new Promise((resolve) => {
+          msgModal.style.display = 'flex';
+          msgResolver = resolve;
+        });
+      }
+
+      document.getElementById('msg-opt-1').addEventListener('click', () => {
+        if (msgResolver) msgResolver("张泽禹，生日快乐");
+        msgModal.style.display = 'none';
       });
-    }
+      document.getElementById('msg-opt-2').addEventListener('click', () => {
+        if (msgResolver) msgResolver("我将永远陪伴张泽禹");
+        msgModal.style.display = 'none';
+      });
 
-    function updateTotalDisplay() {
-      document.getElementById('totalClicksDisplay').innerText = Object.values(provinceData).reduce((s,i)=>s+i.count,0);
-    }
-
-    function renderProvinceDetail(name) {
-      const d = provinceData[name];
-      if(!d) return;
-      document.getElementById('selectedProvinceName').innerText = name;
-      document.getElementById('selectedProvinceClicks').innerText = d.count + ' 次';
-      const container = document.getElementById('messageListContainer');
-      const msgs = d.messages || [];
-      container.innerHTML = msgs.length ? [...msgs].reverse().map(m => `<div class="message-item">🕒 ${m.time} “${m.text}”</div>`).join('') : '<div class="empty-message">🌱 还没有留言</div>';
-    }
-
-    async function handleClick(name) {
-      if (!provinceData[name]) return;
-      provinceData[name].count += 1;
-      const msg = prompt(`💚 为 ${name} 点亮！祝福张泽禹:`, "泽禹生日快乐！🎂");
-      if (msg && msg.trim()) {
-        provinceData[name].messages.push({ text: msg.trim(), time: new Date().toLocaleTimeString('zh-CN', { hour12: false }) });
+      // 彩蛋模态框（手动关闭）
+      function showEasterModal() {
+        return new Promise((resolve) => {
+          easterModal.style.display = 'flex';
+          easterResolver = resolve;
+        });
       }
-      try {
-        syncStatusText.innerText = '⏳ 同步中...';
-        const { error } = await supabase.from('province_stats').update({ data: provinceData }).eq('id', 1);
-        if (error) throw error;
-        syncStatusText.innerText = '✅ 已同步';
-      } catch (e) {
-        syncStatusText.innerText = '⚠️ 保存失败: ' + e.message;
+
+      document.getElementById('easter-close').addEventListener('click', () => {
+        if (easterResolver) easterResolver();
+        easterModal.style.display = 'none';
+      });
+
+      // 渲染地图（马卡龙绿色系，上限430）
+      function renderMap() {
+        if (!chart) return;
+        const counts = Object.values(provinceData).map(d => d.count);
+        const max = Math.min(Math.max(...counts, 1), 430);
+        const macaronGreen = [
+          '#eaf7e3', '#d4efc0', '#bee5a8', '#a8db90', '#92d178',
+          '#7cc760', '#66bd48', '#50b330', '#3aa918', '#249f00'
+        ];
+        chart.setOption({
+          tooltip: { trigger: 'item', formatter: (p) => `${p.name}<br/>💚 点亮: ${provinceData[p.name]?.count || 0} 次` },
+          visualMap: {
+            min: 0, max: max, calculable: true,
+            inRange: { color: macaronGreen },
+            textStyle: { color: '#1d4512' },
+            seriesIndex: 0, showLabel: true, itemWidth: 18, itemHeight: 120, left: 'left', bottom: 20
+          },
+          series: [{
+            type: 'map', map: 'china', roam: true, scaleLimit: { min: 0.8, max: 2.5 }, zoom: 1.1, center: [104, 35],
+            itemStyle: { borderColor: '#3b7525', areaColor: '#d4eac2', emphasis: { areaColor: '#b1e085' } },
+            label: { show: true, color: '#1e4a0b' },
+            data: PROVINCE_LIST.map(n => ({ name: n, value: provinceData[n].count }))
+          }]
+        }, { notMerge: false });
       }
-      currentSelected = name;
-      renderMap();
-      updateTotalDisplay();
-      renderProvinceDetail(name);
-    }
 
-    function initChart() {
-      chart = echarts.init(document.getElementById('chinaMap'));
-      chart.on('click', (p) => { if (p.componentType === 'series') handleClick(p.name); });
-      window.addEventListener('resize', () => chart.resize());
-      provinceData = createEmptyData();
-      renderMap();
-    }
+      function renderDetail(name) {
+        const d = provinceData[name];
+        if (!d) return;
+        document.getElementById('selectedProvinceName').innerText = name;
+        document.getElementById('selectedProvinceClicks').innerText = `${d.count} 次${d.count>0?' 💚':''}`;
+        const cont = document.getElementById('messageListContainer');
+        const msgs = d.messages || [];
+        if (!msgs.length) cont.innerHTML = '<div class="empty-message">🌱 还没有留言，点击省份为泽禹送上祝福</div>';
+        else cont.innerHTML = [...msgs].reverse().map(m => `<div class="message-item"><span class="message-time">🕒 ${m.time||''}</span> “${m.text.replace(/</g,'&lt;')}”</div>`).join('');
+      }
 
-    async function start() {
-      initChart();
-      await loadFromSupabase();
-    }
-    start();
-  })();
-</script>
+      // 云端数据加载
+      async function loadDataFromCloud(silent = true) {
+        try {
+          if (!silent) syncStatusText.innerText = '⏳ 读取云端...';
+          let { data, error } = await supabase.from('province_stats').select('data').eq('id', 1).single();
+          if (error) throw error;
+          if (data && data.data) {
+            const cloud = data.data;
+            const complete = createEmptyData();
+            PROVINCE_LIST.forEach(n => { if (cloud[n]) complete[n] = cloud[n]; });
+            provinceData = complete;
+            if (!silent) syncStatusText.innerText = '✅ 已连接云端 🎸';
+          } else {
+            provinceData = createEmptyData();
+            await supabase.from('province_stats').upsert({ id: 1, data: provinceData, updated_at: new Date() });
+            if (!silent) syncStatusText.innerText = '✅ 云端已初始化 🎸';
+          }
+        } catch (e) {
+          console.error(e);
+          if (!silent) syncStatusText.innerText = '⚠️ 离线模式';
+          provinceData = createEmptyData();
+        }
+        renderMap();
+        updateTotal();
+        renderDetail(currentSelected);
+      }
+
+      async function saveData() {
+        try {
+          syncStatusText.innerText = '⏳ 同步中...';
+          const { error } = await supabase.from('province_stats')
+            .update({ data: provinceData, updated_at: new Date() })
+            .eq('id', 1);
+          if (error) throw error;
+          syncStatusText.innerText = '✅ 已同步 🎸';
+        } catch (e) {
+          syncStatusText.innerText = '⚠️ 保存失败';
+        }
+      }
+
+      // 省份点击处理
+      async function onProvinceClick(name) {
+        if (!provinceData.hasOwnProperty(name)) {
+          alert('🌟 此区域为中国固有领土，请点击具体省份留下祝福～');
+          return;
+        }
+        provinceData[name].count += 1;
+
+        // 第一步：弹出祝福选择框
+        const chosenMsg = await showMessageModal();
+        const timeStr = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        provinceData[name].messages.push({ text: chosenMsg, time: timeStr });
+
+        // 发射弹幕
+        fireDanmaku(name, `${name} - ${chosenMsg}`);
+
+        // 保存到云端
+        await saveData();
+
+        // 第二步：弹出彩蛋，需要手动关闭
+        await showEasterModal();
+
+        currentSelected = name;
+        renderMap();
+        updateTotal();
+        renderDetail(name);
+      }
+
+      function initChart() {
+        chart = echarts.init(document.getElementById('chinaMap'));
+        chart.on('click', (p) => { if (p.componentType === 'series') onProvinceClick(p.name); });
+        window.addEventListener('resize', () => chart.resize());
+        provinceData = createEmptyData();
+        renderMap();
+      }
+
+      // 实时订阅
+      function setupRealtime() {
+        supabase.channel('province_stats_changes')
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'province_stats', filter: 'id=eq.1' },
+            () => loadDataFromCloud(true))
+          .subscribe();
+      }
+
+      async function start() {
+        initChart();
+        await loadDataFromCloud(false);
+        setupRealtime();
+      }
+
+      start();
+    })();
+  </script>
 </body>
 </html>
